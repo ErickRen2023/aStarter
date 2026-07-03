@@ -1,0 +1,207 @@
+/* ============================================
+   CSS Variables — 主题与设计令牌
+   ============================================ */
+:root {
+  --bg-blur: 0px;
+  --overlay-opacity: 0.3;
+  --clock-color: #ffffff;
+  --clock-font-size: 4rem;
+  --search-bg: rgba(255, 255, 255, 0.15);
+  --search-text: #ffffff;
+  --search-placeholder: rgba(255, 255, 255, 0.6);
+  --search-focus-bg: rgba(255, 255, 255, 0.25);
+  --search-focus-glow: rgba(255, 255, 255, 0.3);
+  --transition-speed: 0.3s;
+}
+
+/* ============================================
+   基础重置与全屏布局
+   ============================================ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   背景层
+   ============================================ */
+#background-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-color: #1a1a2e;
+}
+
+#bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+}
+
+#bg-image.loaded {
+  opacity: 1;
+}
+
+#bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgba(0, 0, 0, var(--overlay-opacity)) 0%,
+    rgba(0, 0, 0, 0) 60%,
+    rgba(0, 0, 0, calc(var(--overlay-opacity) * 0.6)) 100%
+  );
+  pointer-events: none;
+}
+
+/* 背景模糊通过 JS 动态设置 backdrop-filter */
+#background-layer.blurred {
+  backdrop-filter: blur(var(--bg-blur));
+  -webkit-backdrop-filter: blur(var(--bg-blur));
+}
+
+/* ============================================
+   主内容区 — 垂直居中
+   ============================================ */
+#content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 20px;
+  /* 整体向上偏移避免视觉重心偏低 */
+  transform: translateY(-8%);
+}
+
+/* ============================================
+   时钟
+   ============================================ */
+#clock-container {
+  text-align: center;
+  user-select: none;
+  margin-bottom: 40px;
+}
+
+.clock-time {
+  font-size: var(--clock-font-size);
+  font-weight: 200;
+  color: var(--clock-color);
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+  transition: font-size var(--transition-speed);
+}
+
+.clock-date {
+  font-size: calc(var(--clock-font-size) * 0.28);
+  font-weight: 300;
+  color: var(--clock-color);
+  opacity: 0.85;
+  margin-top: 8px;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.3);
+  transition: font-size var(--transition-speed);
+}
+
+/* ============================================
+   搜索框 — 毛玻璃效果
+   ============================================ */
+#search-container {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+}
+
+.search-input {
+  width: 100%;
+  height: 52px;
+  padding: 0 24px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 26px;
+  outline: none;
+
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--search-text);
+  background: var(--search-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  transition:
+    background var(--transition-speed),
+    border-color var(--transition-speed),
+    box-shadow var(--transition-speed),
+    backdrop-filter var(--transition-speed);
+}
+
+.search-input::placeholder {
+  color: var(--search-placeholder);
+}
+
+.search-input:focus {
+  background: var(--search-focus-bg);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 20px var(--search-focus-glow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.search-hint {
+  position: absolute;
+  left: 24px;
+  bottom: -24px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.search-hint:empty {
+  opacity: 0;
+}
+
+/* ============================================
+   设置按钮
+   ============================================ */
+.settings-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition:
+    background 0.2s,
+    color 0.2s,
+    transform 0.2s;
+}
+
+.settings-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.95);
+  transform: rotate(90deg);
+}

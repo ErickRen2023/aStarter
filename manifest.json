@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "version": "0.2.0",
+  "description": "__MSG_extDescription__",
+  "default_locale": "zh_CN",
+  "author": "Tidal Starter",
+  "homepage_url": "https://github.com/tidal/starter",
+
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+
+  "options_page": "settings.html",
+
+  "permissions": [
+    "storage",
+    "alarms",
+    "unlimitedStorage"
+  ],
+
+  "host_permissions": [
+    "https://www.bing.com/*"
+  ],
+
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+
+  "commands": {
+    "focus-search": {
+      "suggested_key": {
+        "default": "Ctrl+K",
+        "mac": "Command+K"
+      },
+      "description": "__MSG_cmdFocusSearch__"
+    }
+  }
+}

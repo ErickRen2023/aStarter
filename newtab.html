@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>起始页</title>
+  <link rel="stylesheet" href="newtab.css">
+</head>
+<body>
+  <div id="background-layer">
+    <img id="bg-image" src="" alt="" />
+    <div id="bg-overlay"></div>
+  </div>
+
+  <main id="content">
+    <div id="clock-container">
+      <div id="time" class="clock-time">00:00</div>
+      <div id="date" class="clock-date">2026年7月3日 星期四</div>
+    </div>
+
+    <div id="search-container">
+      <input
+        type="text"
+        id="search-input"
+        class="search-input"
+        placeholder="输入搜索内容或 / 命令…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <div id="search-hint" class="search-hint"></div>
+    </div>
+  </main>
+
+  <button id="settings-btn" class="settings-btn" title="设置">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="10" cy="10" r="3"/>
+      <path d="M10 1.5V4M10 16v2.5M3.34 4.93l1.77 1.02M14.89 14.05l1.77 1.02M1.5 10H4M16 10h2.5M3.34 15.07l1.77-1.02M14.89 5.95l1.77-1.02"/>
+    </svg>
+  </button>
+
+  <script type="module" src="newtab.js"></script>
+</body>
+</html>
