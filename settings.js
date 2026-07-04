@@ -10,23 +10,32 @@ import { getSettings, setSettings, exportConfig, importConfig, resetSettings,
 
 let currentSettings = {};
 let saveTimer = null;
+let scope = document;
 const SAVE_DEBOUNCE = 500;
 
 // ========== DOM 元素缓存 ==========
 
-function $(selector, scope = document) {
-  return scope.querySelector(selector);
+function $(selector, s) {
+  return (s || scope).querySelector(selector);
 }
 
 // ========== 初始化 ==========
 
-document.addEventListener('DOMContentLoaded', async () => {
+export async function init(rootElement) {
+  scope = rootElement || document;
   currentSettings = await getSettings();
   populateForm();
   bindEvents();
   renderCommandsList();
   updateConditionalVisibility();
-});
+}
+
+export async function refresh() {
+  currentSettings = await getSettings();
+  populateForm();
+  renderCommandsList();
+  updateConditionalVisibility();
+}
 
 // ========== 表单填充 ==========
 
@@ -61,7 +70,6 @@ function populateForm() {
     $('#search-engine').value = 'custom';
   }
   $('#search-engine-url').value = sr.defaultEngineUrl || '';
-  $('#search-autofocus').checked = sr.autoFocus;
   $('#search-shortcut').value = sr.shortcut || '';
 
   // General
@@ -101,7 +109,6 @@ function bindEvents() {
   bindChangeNum('#clock-fontsize', 'clock', 'fontSize');
 
   // ---- Search ----
-  bindCheckbox('#search-autofocus', 'search', 'autoFocus');
   bindChange('#search-shortcut', 'search', 'shortcut');
 
   $('#search-engine').addEventListener('change', (e) => {
@@ -286,7 +293,7 @@ function renderCommandsList() {
 }
 
 function showAddCommandModal() {
-  const existing = document.querySelector('.modal-backdrop');
+  const existing = (scope || document).querySelector('.modal-backdrop');
   if (existing) existing.remove();
 
   const backdrop = document.createElement('div');
@@ -315,7 +322,15 @@ function showAddCommandModal() {
   `;
   document.body.appendChild(backdrop);
 
-  const close = () => backdrop.remove();
+  const close = () => {
+    backdrop.remove();
+    document.removeEventListener('keydown', escHandler);
+  };
+
+  const escHandler = (e) => {
+    if (e.key === 'Escape') close();
+  };
+  document.addEventListener('keydown', escHandler);
 
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) close();
