@@ -200,8 +200,13 @@ html, body {
     transform 0.2s;
 }
 
+.settings-btn i {
+  font-size: 22px;
+  line-height: 1;
+}
+
 .settings-btn:hover {
   background: rgba(255, 255, 255, 0.25);
   color: rgba(255, 255, 255, 0.95);
-  transform: rotate(90deg);
+  transform: rotate(60deg);
 }
