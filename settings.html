@@ -125,13 +125,6 @@
       </div>
 
       <div class="form-group">
-        <label class="form-checkbox">
-          <input type="checkbox" id="search-autofocus" checked />
-          <span>自动聚焦搜索框</span>
-        </label>
-      </div>
-
-      <div class="form-group">
         <label class="form-label">页面内快捷键（单键唤起搜索框）</label>
         <div class="shortcut-row">
           <input type="text" id="search-shortcut" class="form-input form-input-short" maxlength="1" placeholder="/" />
@@ -180,6 +173,9 @@
   <input type="file" id="import-file-input" accept=".json" style="display:none" />
   <input type="file" id="import-commands-input" accept=".json" style="display:none" />
 
-  <script type="module" src="settings.js"></script>
+  <script type="module">
+    import { init } from './settings.js';
+    document.addEventListener('DOMContentLoaded', () => init(document.body));
+  </script>
 </body>
 </html>

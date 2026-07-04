@@ -135,7 +135,6 @@ async function initDefaults() {
     search: {
       defaultEngine: 'baidu',
       defaultEngineUrl: 'https://www.baidu.com/s?wd={query}',
-      autoFocus: true,
       shortcut: '/'
     },
     commands: [],

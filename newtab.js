@@ -7,6 +7,32 @@ import { getSettings, onSettingsChanged } from './lib/storage.js';
 import { start as clockStart, update as clockUpdate, stop as clockStop } from './lib/clock.js';
 import { render as bgRender, applyEffects } from './lib/background.js';
 import { init as searchInit, updateSettings as searchUpdate, focus as searchFocus } from './lib/search.js';
+console.log('[newtab] Module loaded, importing settings...');
+import { init as settingsInit, refresh as settingsRefresh } from './settings.js';
+console.log('[newtab] Settings module imported successfully.');
+
+// ========== Settings Modal State ==========
+
+let settingsInitialized = false;
+
+function getOverlay() { return document.getElementById('settings-modal-overlay'); }
+function getModalBody() { return document.getElementById('settings-modal-body'); }
+
+async function openSettingsModal() {
+  const overlay = getOverlay();
+  const body = getModalBody();
+  if (!settingsInitialized) {
+    await settingsInit(body);
+    settingsInitialized = true;
+  } else {
+    await settingsRefresh();
+  }
+  overlay.classList.add('visible');
+}
+
+function closeSettingsModal() {
+  getOverlay().classList.remove('visible');
+}
 
 // ========== 初始化 ==========
 
@@ -22,13 +48,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     settings.commands
   );
 
-  // 3. 设置按钮
+  // 3. 设置按钮 → 弹出 Modal
   document.getElementById('settings-btn').addEventListener('click', () => {
-    if (chrome.runtime.openOptionsPage) {
-      chrome.runtime.openOptionsPage();
-    } else {
-      window.open(chrome.runtime.getURL('settings.html'), '_blank');
+    console.log('[newtab] Settings button clicked!');
+    try {
+      openSettingsModal();
+    } catch (err) {
+      console.error('[newtab] openSettingsModal error:', err);
     }
+  });
+
+  // Modal 关闭按钮
+  document.getElementById('settings-modal-close').addEventListener('click', closeSettingsModal);
+
+  // 点击遮罩层关闭
+  getOverlay().addEventListener('click', (e) => {
+    if (e.target === getOverlay()) closeSettingsModal();
   });
 
   // 4. 监听设置变更
@@ -45,8 +80,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     );
   });
 
-  // 5. 页面内快捷键
+  // 5. 全局键盘事件（快捷键 + Modal Escape）
   document.addEventListener('keydown', (e) => {
+    // Escape: 优先关闭嵌套 modal（添加命令等），再关闭设置 modal
+    if (e.key === 'Escape') {
+      const nestedBackdrop = document.querySelector('.modal-backdrop');
+      if (nestedBackdrop) return; // 嵌套 modal 自带 Escape 处理
+      if (getOverlay().classList.contains('visible')) {
+        closeSettingsModal();
+        return;
+      }
+    }
+
+    // 页面快捷键（Modal 打开时忽略）
+    if (getOverlay().classList.contains('visible')) return;
     handlePageShortcut(e, settings.search.shortcut);
   });
 
