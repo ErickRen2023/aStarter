@@ -5,7 +5,7 @@
 
 import { getSettings, onSettingsChanged } from './lib/storage.js';
 import { start as clockStart, update as clockUpdate, stop as clockStop } from './lib/clock.js';
-import { render as bgRender, applyEffects } from './lib/background.js';
+import { render as bgRender, applyEffects, downloadCurrentImage } from './lib/background.js';
 import { init as searchInit, updateSettings as searchUpdate, focus as searchFocus } from './lib/search.js';
 console.log('[newtab] Module loaded, importing settings...');
 import { init as settingsInit, refresh as settingsRefresh } from './settings.js';
@@ -55,6 +55,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       openSettingsModal();
     } catch (err) {
       console.error('[newtab] openSettingsModal error:', err);
+    }
+  });
+
+  // 下载按钮 → 保存当前壁纸
+  document.getElementById('download-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('download-btn');
+    const icon = btn.querySelector('i');
+
+    // loading 状态
+    icon.className = 'ri-loader-4-line';
+    btn.classList.add('loading');
+
+    try {
+      await downloadCurrentImage(settings.background);
+      // 成功
+      icon.className = 'ri-check-line';
+      btn.classList.remove('loading');
+      btn.classList.add('success');
+    } catch (err) {
+      console.error('[newtab] Download failed:', err);
+      // 失败
+      icon.className = 'ri-close-line';
+      btn.classList.remove('loading');
+      btn.classList.add('error');
+    } finally {
+      setTimeout(() => {
+        icon.className = 'ri-download-2-line';
+        btn.classList.remove('success', 'error');
+      }, 2000);
     }
   });
 

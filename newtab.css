@@ -212,6 +212,62 @@ html, body {
 }
 
 /* ============================================
+   下载按钮
+   ============================================ */
+.download-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 72px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.download-btn i {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.download-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.95);
+  transform: scale(1.15);
+}
+
+.download-btn.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.download-btn.loading i {
+  animation: spin 1s linear infinite;
+}
+
+.download-btn.success i {
+  color: #4cd964;
+}
+
+.download-btn.error i {
+  color: #ff3b30;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
    Settings Modal Overlay — 暗色毛玻璃弹窗
    ============================================ */
 
