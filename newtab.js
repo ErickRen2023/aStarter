@@ -5,7 +5,7 @@
 
 import { getSettings, onSettingsChanged } from './lib/storage.js';
 import { start as clockStart, update as clockUpdate, stop as clockStop } from './lib/clock.js';
-import { render as bgRender, applyEffects, downloadCurrentImage } from './lib/background.js';
+import { render as bgRender, applyEffects, downloadCurrentImage, navigateBingDay, getBingDayIndex } from './lib/background.js';
 import { init as searchInit, updateSettings as searchUpdate, focus as searchFocus } from './lib/search.js';
 console.log('[newtab] Module loaded, importing settings...');
 import { init as settingsInit, refresh as settingsRefresh } from './settings.js';
@@ -14,6 +14,30 @@ console.log('[newtab] Settings module imported successfully.');
 // ========== Settings Modal State ==========
 
 let settingsInitialized = false;
+
+// ========== Bing Day Navigation ==========
+
+function updateBingDayIndicator(index) {
+  const el = document.getElementById('bg-day-indicator');
+  if (!el) return;
+  if (index === 0) {
+    el.textContent = chrome.i18n.getMessage('bingToday');
+  } else if (index === 1) {
+    el.textContent = chrome.i18n.getMessage('bingYesterday');
+  } else {
+    const d = new Date();
+    d.setDate(d.getDate() - index);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    el.textContent = `${yyyy}-${mm}-${dd}`;
+  }
+}
+
+function setBingNavVisibility(visible) {
+  const group = document.getElementById('bg-nav-group');
+  if (group) group.classList.toggle('bg-nav-hidden', !visible);
+}
 
 function getOverlay() { return document.getElementById('settings-modal-overlay'); }
 function getModalBody() { return document.getElementById('settings-modal-body'); }
@@ -34,15 +58,22 @@ function closeSettingsModal() {
   getOverlay().classList.remove('visible');
 }
 
+// ========== Module-level settings (kept current for keyboard handlers) ==========
+
+let settings = null;
+
 // ========== 初始化 ==========
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. 读取设置
-  const settings = await getSettings();
+  settings = await getSettings();
 
   // 2. 并行初始化各模块
   clockStart(settings.clock, settings.general.language);
-  bgRender(settings.background);
+  bgRender(settings.background).then(() => {
+    setBingNavVisibility(settings.background.source === 'bing');
+    updateBingDayIndicator(getBingDayIndex());
+  });
   searchInit(
     { ...settings.search, blurEnabled: settings.background.blurEnabled, blurLevel: settings.background.blurLevel },
     settings.commands
@@ -87,6 +118,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Bing 导航按钮 → 切换 7 天壁纸
+  document.getElementById('bg-nav-prev').addEventListener('click', async () => {
+    await navigateBingDay(1, true);
+    updateBingDayIndicator(getBingDayIndex());
+  });
+
+  document.getElementById('bg-nav-next').addEventListener('click', async () => {
+    await navigateBingDay(-1, true);
+    updateBingDayIndicator(getBingDayIndex());
+  });
+
   // Modal 关闭按钮
   document.getElementById('settings-modal-close').addEventListener('click', closeSettingsModal);
 
@@ -99,6 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   onSettingsChanged(async (changes) => {
     // 重新获取完整设置（因为有默认值合并）
     const updated = await getSettings();
+    settings = updated;
 
     // 更新各模块
     clockUpdate(updated.clock, updated.general.language);
@@ -107,6 +150,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       { ...updated.search, blurEnabled: updated.background.blurEnabled, blurLevel: updated.background.blurLevel },
       updated.commands
     );
+
+    // 更新 Bing 导航可见性
+    setBingNavVisibility(updated.background.source === 'bing');
+    updateBingDayIndicator(getBingDayIndex());
   });
 
   // 5. 全局键盘事件（快捷键 + Modal Escape）
@@ -123,6 +170,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 页面快捷键（Modal 打开时忽略）
     if (getOverlay().classList.contains('visible')) return;
+
+    // Bing 导航：左右箭头键
+    if (settings && settings.background.source === 'bing') {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateBingDay(1, true).then(() => updateBingDayIndicator(getBingDayIndex()));
+        return;
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateBingDay(-1, true).then(() => updateBingDayIndicator(getBingDayIndex()));
+        return;
+      }
+    }
+
     handlePageShortcut(e, settings.search.shortcut);
   });
 
@@ -131,7 +192,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (msg.action === 'focus-search') {
       searchFocus();
     } else if (msg.action === 'refresh-background') {
-      bgRender(settings.background);
+      getSettings().then(s => {
+        settings = s;
+        bgRender(s.background);
+        setBingNavVisibility(s.background.source === 'bing');
+        updateBingDayIndicator(getBingDayIndex());
+      });
     }
   });
 });

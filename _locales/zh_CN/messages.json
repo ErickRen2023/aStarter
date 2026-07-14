@@ -35,5 +35,7 @@
   "prefix": { "message": "前缀" },
   "url": { "message": "搜索 URL" },
   "aliases": { "message": "别名（逗号分隔）" },
-  "recordShortcut": { "message": "录制快捷键" }
+  "recordShortcut": { "message": "录制快捷键" },
+  "bingToday": { "message": "今天" },
+  "bingYesterday": { "message": "昨天" }
 }
