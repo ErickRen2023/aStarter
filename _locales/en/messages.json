@@ -35,5 +35,7 @@
   "prefix": { "message": "Prefix" },
   "url": { "message": "Search URL" },
   "aliases": { "message": "Aliases (comma separated)" },
-  "recordShortcut": { "message": "Record Shortcut" }
+  "recordShortcut": { "message": "Record Shortcut" },
+  "bingToday": { "message": "Today" },
+  "bingYesterday": { "message": "Yesterday" }
 }

@@ -18,7 +18,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'fetch-bing') {
-    await fetchAndCacheBingDaily();
+    await fetchAndCacheBingWeekly();
   }
 });
 
@@ -39,43 +39,101 @@ async function setupBingAlarm() {
   chrome.alarms.create('fetch-bing', { periodInMinutes: 360 });
 }
 
-async function fetchAndCacheBingDaily() {
+async function fetchAndCacheBingWeekly() {
   try {
-    // 获取 Bing 每日图片信息
+    // 获取最近 7 天 Bing 图片信息
     const resp = await fetch(
-      'https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1'
+      'https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=7'
     );
     if (!resp.ok) return;
 
     const data = await resp.json();
     if (!data.images || data.images.length === 0) return;
 
-    const img = data.images[0];
-    const url = 'https://www.bing.com' + img.url;
-
-    // 下载图片
-    const imgResp = await fetch(url);
-    if (!imgResp.ok) return;
-    const blob = await imgResp.blob();
-
-    // 存入 IndexedDB
     const db = await openDB();
-    const tx = db.transaction('images', 'readwrite');
-    const store = tx.objectStore('images');
-    store.put(blob, 'bing_daily');
-    store.put(new Blob([img.copyright || ''], { type: 'text/plain' }), 'bing_copyright');
 
-    await new Promise((resolve, reject) => {
-      tx.oncomplete = resolve;
-      tx.onerror = reject;
-    });
+    // 循环缓存每一天的图片
+    for (let i = 0; i < data.images.length; i++) {
+      const img = data.images[i];
+      const url = 'https://www.bing.com' + img.url;
+
+      // 计算日期：today - i
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+
+      try {
+        const imgResp = await fetch(url);
+        if (!imgResp.ok) continue;
+        const blob = await imgResp.blob();
+
+        const tx = db.transaction('images', 'readwrite');
+        const store = tx.objectStore('images');
+        store.put(blob, 'bing_' + dateStr);
+        store.put(
+          new Blob([img.copyright || ''], { type: 'text/plain' }),
+          'bing_copyright_' + dateStr
+        );
+
+        await new Promise((resolve, reject) => {
+          tx.oncomplete = resolve;
+          tx.onerror = reject;
+        });
+      } catch {
+        // 单张图片失败不影响其他
+      }
+    }
+
+    // 向后兼容：同时写入旧格式 key（今天 = idx 0）
+    if (data.images.length > 0) {
+      const todayImg = data.images[0];
+      try {
+        const d = new Date();
+        const todayStr = d.toISOString().split('T')[0];
+        const db2 = await openDB();
+        const tx2 = db2.transaction('images', 'readwrite');
+        const store2 = tx2.objectStore('images');
+        // 复制今天的 blob 到旧 key
+        const todayReq = store2.get('bing_' + todayStr);
+        todayReq.onsuccess = () => {
+          if (todayReq.result) {
+            store2.put(todayReq.result, 'bing_daily');
+          }
+        };
+        store2.put(
+          new Blob([todayImg.copyright || ''], { type: 'text/plain' }),
+          'bing_copyright'
+        );
+        await new Promise((resolve, reject) => {
+          tx2.oncomplete = resolve;
+          tx2.onerror = reject;
+        });
+      } catch {
+        // 向后兼容写入失败不影响主流程
+      }
+    }
+
+    // 写入缓存天数
+    try {
+      const db3 = await openDB();
+      const tx3 = db3.transaction('images', 'readwrite');
+      const store3 = tx3.objectStore('images');
+      store3.put(
+        new Blob([String(data.images.length)], { type: 'text/plain' }),
+        'bing_day_count'
+      );
+      await new Promise((resolve, reject) => {
+        tx3.oncomplete = resolve;
+        tx3.onerror = reject;
+      });
+    } catch { /* ignore */ }
 
     // 通知已打开的 newtab 页面刷新背景
     await notifyNewtab({ action: 'refresh-background' });
 
-    console.log('[Starter SW] Bing daily image cached:', img.copyright);
+    console.log('[Starter SW] Bing weekly images cached:', data.images.length, 'days');
   } catch (err) {
-    console.warn('[Starter SW] Failed to fetch Bing daily:', err.message);
+    console.warn('[Starter SW] Failed to fetch Bing weekly:', err.message);
     // 静默失败，下次 alarm 重试
   }
 }
