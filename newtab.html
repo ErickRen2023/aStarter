@@ -203,6 +203,18 @@
           </div>
         </section>
 
+        <!-- 调试 -->
+        <section class="settings-section">
+          <h2 class="section-title">调试</h2>
+          <div class="form-group">
+            <p class="form-hint">清除本地壁纸缓存（Bing 每日图片缓存）。下次打开新标签页将重新下载。</p>
+          </div>
+          <div class="form-actions">
+            <button id="clear-cache-btn" class="btn btn-danger">清除壁纸缓存</button>
+            <span id="clear-cache-status" style="margin-left:12px;font-size:13px;color:#6e6e73;"></span>
+          </div>
+        </section>
+
       <!-- Hidden file inputs for import -->
       <input type="file" id="import-file-input" accept=".json" class="hidden-input" />
       <input type="file" id="import-commands-input" accept=".json" class="hidden-input" />

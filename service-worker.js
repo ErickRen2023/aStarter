@@ -56,6 +56,7 @@ async function fetchAndCacheBingWeekly() {
     for (let i = 0; i < data.images.length; i++) {
       const img = data.images[i];
       const url = 'https://www.bing.com' + img.url;
+      const uhdUrl = url.replace(/_1920x1080/g, '_UHD');
 
       // 计算日期：today - i
       const d = new Date();
@@ -63,7 +64,9 @@ async function fetchAndCacheBingWeekly() {
       const dateStr = d.toISOString().split('T')[0];
 
       try {
-        const imgResp = await fetch(url);
+        // 优先 UHD，失败则回退普通分辨率
+        let imgResp = await fetch(uhdUrl);
+        if (!imgResp.ok) imgResp = await fetch(url);
         if (!imgResp.ok) continue;
         const blob = await imgResp.blob();
 
