@@ -4,7 +4,8 @@
    ============================================ */
 
 import { getSettings, setSettings, exportConfig, importConfig, resetSettings,
-         cacheImage, getCachedImage, getAllCachedImageKeys, removeCachedImage } from './lib/storage.js';
+         cacheImage, getCachedImage, getAllCachedImageKeys, removeCachedImage,
+         clearAllCachedImages } from './lib/storage.js';
 
 // ========== 状态 ==========
 
@@ -147,6 +148,25 @@ function bindEvents() {
   $('#import-btn').addEventListener('click', () => $('#import-file-input').click());
   $('#import-file-input').addEventListener('change', handleImport);
   $('#reset-btn').addEventListener('click', handleReset);
+
+  // ---- 调试：清除缓存 ----
+  $('#clear-cache-btn').addEventListener('click', async () => {
+    const btn = $('#clear-cache-btn');
+    const status = $('#clear-cache-status');
+    btn.disabled = true;
+    btn.textContent = '清除中…';
+    try {
+      await clearAllCachedImages();
+      status.textContent = '✓ 缓存已清除';
+      status.style.color = '#34c759';
+    } catch (err) {
+      status.textContent = '✗ 清除失败：' + err.message;
+      status.style.color = '#ff3b30';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '清除壁纸缓存';
+    }
+  });
 }
 
 // ========== 辅助函数 ==========
