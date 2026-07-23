@@ -139,6 +139,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 4. 监听设置变更
   onSettingsChanged(async (changes) => {
+    // 仅 bingDayState 变化时（导航持久化写入），背景已在 navigateBingDay 中渲染，跳过重渲染
+    const keys = Object.keys(changes);
+    if (keys.length === 1 && keys[0] === 'bingDayState') return;
+
     // 重新获取完整设置（因为有默认值合并）
     const updated = await getSettings();
     settings = updated;
